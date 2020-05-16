@@ -1,0 +1,9 @@
+apiVersion: "demos.fearofoblivion.com/v1"
+kind: Foo
+metadata:
+  name: a-foo
+spec:
+  value1: "Hello World!"
+  value2: "This is awesome!"
+  value3: 42
+  value4: 5
