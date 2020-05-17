@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -117,6 +118,31 @@ namespace CrdController.Services
             var patch = new JsonPatchDocument<Foo>();
             patch.Add(x => x.Status, status);
             var response = await _kubernetes.PatchNamespacedCustomObjectAsync(new V1Patch(patch), Foo.Group, Foo.Version, "default", Foo.Plural, foo.Metadata.Name);
+
+            var fooRef = new V1ObjectReference(
+                    apiVersion: "apiextensions.k8s.io/v1beta1",
+                    kind: "foo",
+                    name: foo.Metadata.Name,
+                    namespaceProperty: "default",
+                    uid: foo.Metadata.Uid
+                );
+            var fooOwnerRef = new V1OwnerReference(
+                    apiVersion: "apiextensions.k8s.io/v1beta1",
+                    kind: "foo",
+                    name: foo.Metadata.Name,
+                    uid: foo.Metadata.Uid
+                );
+            var ev = new V1Event(
+                                involvedObject: fooRef, 
+                                metadata: new V1ObjectMeta(generateName: "StatusChangeEvent-", namespaceProperty: "default", ownerReferences: new List<V1OwnerReference> { fooOwnerRef }), 
+                                related: fooRef, 
+                                action: "StatusChanged", 
+                                message: "Status changed to " + status, 
+                                type: "StatusChange", 
+                                reason: "Because...", 
+                                lastTimestamp: DateTime.Now
+                            );
+            await _kubernetes.CreateNamespacedEventAsync(ev, "default");
         }
 
         private static string GetFooData(Foo item)
