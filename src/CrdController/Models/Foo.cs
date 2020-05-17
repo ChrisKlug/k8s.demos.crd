@@ -5,10 +5,16 @@ namespace CrdController.Models
 {
     public class Foo : IKubernetesObject<V1ObjectMeta>, IKubernetesObject, IMetadata<V1ObjectMeta>
     {
+        public const string Group = "demos.fearofoblivion.com";
+        public const string Version = "v1";
+        public const string Plural = "foos";
+        public const string Singular = "foo";
+
         public string ApiVersion { get; set; }
         public string Kind { get; set; }
         public V1ObjectMeta Metadata { get; set; }
         public FooSpec Spec { get; set; }
+        public string Status { get; set; }
 
         public class FooSpec
         {

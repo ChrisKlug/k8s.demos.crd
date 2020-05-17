@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crd-controller-deployment
+  labels:
+    app: crd-controller
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: crd-controller
+  template:
+    metadata:
+      labels:
+        app: crd-controller
+    spec:
+      containers:
+      - name: crd-controller
+        image: zerokoll.azurecr.io/crd-demo
+        ports:
+        - containerPort: 80
+        resources:
+            limits:
+              memory: 128Mi
+              cpu: 250m
+      - name: leader-election
+        image: "k8s.gcr.io/leader-elector:0.5"
+        args:
+        - --election=foo-election
+        - --http=0.0.0.0:4040
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 4040
+        resources:
+            limits:
+              memory: 128Mi
+              cpu: 250m
+      imagePullSecrets:
+        - name: azurecr-zerokoll

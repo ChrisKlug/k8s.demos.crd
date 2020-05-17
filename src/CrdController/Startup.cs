@@ -1,3 +1,4 @@
+using CrdController.Services;
 using k8s;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -16,10 +17,12 @@ namespace CrdController
             if (KubernetesClientConfiguration.IsInCluster())
             {
                 config = KubernetesClientConfiguration.InClusterConfig();
+                services.AddSingleton<ILeaderSelector, KubernetesLeaderSelector>();
             }
             else
             {
-                config = new KubernetesClientConfiguration { Host = "http://127.0.0.1:8001" };
+                config = new KubernetesClientConfiguration { Host = "http://localhost:8001" };
+                services.AddSingleton<ILeaderSelector, DummyLeaderSelector>();
             }
 
             services.AddHttpClient("K8s")
