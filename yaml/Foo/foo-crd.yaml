@@ -13,7 +13,7 @@ spec:
     kind: Foo
     ## shortNames allow shorter string to match your resource on the CLI
     # shortNames:
-    # - ct
+    # - foo
   versions:
     - name: v1
       served: true
@@ -38,6 +38,3 @@ spec:
               type: integer
               minimum: 1
               maximum: 10
-        status:
-          type: string
-          pattern: "^(INITIALIZING)|(COMPLETE)|(FAILED)$"

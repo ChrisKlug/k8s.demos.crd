@@ -1,4 +1,5 @@
 ﻿using CrdController.Models;
+using CrdController.Utils;
 using k8s;
 using k8s.Models;
 using Microsoft.AspNetCore.JsonPatch;
@@ -16,15 +17,15 @@ namespace CrdController.Services
     public class CrdControllerService : IHostedService
     {
         private readonly IKubernetes _kubernetes;
-        private readonly IFooList _fooList;
+        private readonly ResourceSet<Foo> _foos;
         private readonly ILeaderSelector _leaderSelector;
         private readonly ILogger<CrdControllerService> _logger;
         private Watcher<Foo> _watcher;
 
-        public CrdControllerService(IKubernetes kubernetes, IFooList fooList, ILeaderSelector leaderSelector, ILogger<CrdControllerService> logger)
+        public CrdControllerService(IKubernetes kubernetes, ResourceSet<Foo> fooList, ILeaderSelector leaderSelector, ILogger<CrdControllerService> logger)
         {
             _kubernetes = kubernetes;
-            _fooList = fooList;
+            _foos = fooList;
             _leaderSelector = leaderSelector;
             _logger = logger;
         }
@@ -61,15 +62,15 @@ namespace CrdController.Services
             {
                 case WatchEventType.Added:
                     await (isLeader ? OnFooAdded(item) : Task.CompletedTask);
-                    _fooList.Add(item);
+                    _foos.Add(item);
                     return;
                 case WatchEventType.Modified:
                     await (isLeader ? OnFooUpdated(item) : Task.CompletedTask);
-                    _fooList.Update(item);
+                    _foos.Update(item);
                     return;
                 case WatchEventType.Deleted:
                     await (isLeader ? OnFooDeleted(item) : Task.CompletedTask);
-                    _fooList.Remove(item);
+                    _foos.Remove(item);
                     return;
             };
         }
@@ -92,7 +93,7 @@ namespace CrdController.Services
         }
         private Task OnFooUpdated(Foo foo)
         {
-            var preChangeFoo = _fooList.Find(foo.Metadata.Name);
+            var preChangeFoo = _foos.Find(foo.Metadata.Name);
             if (preChangeFoo.Status != foo.Status)
             {
                 _logger.LogInformation($"Foo \"{foo.Metadata.Name}\" changed status to {foo.Status}");
@@ -115,34 +116,43 @@ namespace CrdController.Services
 
         private async Task UpdateStatus(Foo foo, string status)
         {
+            if (!foo.Metadata.Annotations.ContainsKey("status"))
+            {
+                foo.Metadata.Annotations.Add("status", status);
+            }
+            else
+            {
+                foo.Metadata.Annotations["status"] = status;
+            }
             var patch = new JsonPatchDocument<Foo>();
+            patch.Replace(x => x.Metadata.Annotations, foo.Metadata.Annotations);
             patch.Add(x => x.Status, status);
             var response = await _kubernetes.PatchNamespacedCustomObjectAsync(new V1Patch(patch), Foo.Group, Foo.Version, "default", Foo.Plural, foo.Metadata.Name);
 
-            var fooRef = new V1ObjectReference(
-                    apiVersion: "apiextensions.k8s.io/v1beta1",
-                    kind: "foo",
-                    name: foo.Metadata.Name,
-                    namespaceProperty: "default",
-                    uid: foo.Metadata.Uid
-                );
-            var fooOwnerRef = new V1OwnerReference(
-                    apiVersion: "apiextensions.k8s.io/v1beta1",
-                    kind: "foo",
-                    name: foo.Metadata.Name,
-                    uid: foo.Metadata.Uid
-                );
-            var ev = new V1Event(
-                                involvedObject: fooRef, 
-                                metadata: new V1ObjectMeta(generateName: "StatusChangeEvent-", namespaceProperty: "default", ownerReferences: new List<V1OwnerReference> { fooOwnerRef }), 
-                                related: fooRef, 
-                                action: "StatusChanged", 
-                                message: "Status changed to " + status, 
-                                type: "StatusChange", 
-                                reason: "Because...", 
-                                lastTimestamp: DateTime.Now
-                            );
-            await _kubernetes.CreateNamespacedEventAsync(ev, "default");
+            //var fooRef = new V1ObjectReference(
+            //        apiVersion: "apiextensions.k8s.io/v1beta1",
+            //        kind: "foo",
+            //        name: foo.Metadata.Name,
+            //        namespaceProperty: "default",
+            //        uid: foo.Metadata.Uid
+            //    );
+            //var fooOwnerRef = new V1OwnerReference(
+            //        apiVersion: "apiextensions.k8s.io/v1beta1",
+            //        kind: "foo",
+            //        name: foo.Metadata.Name,
+            //        uid: foo.Metadata.Uid
+            //    );
+            //var ev = new V1Event(
+            //                    involvedObject: fooRef, 
+            //                    metadata: new V1ObjectMeta(generateName: "StatusChangeEvent-", namespaceProperty: "default", ownerReferences: new List<V1OwnerReference> { fooOwnerRef }), 
+            //                    related: fooRef, 
+            //                    action: "StatusChanged", 
+            //                    message: "Status changed to " + status, 
+            //                    type: "StatusChange", 
+            //                    reason: "Because...", 
+            //                    lastTimestamp: DateTime.Now
+            //                );
+            //await _kubernetes.CreateNamespacedEventAsync(ev, "default");
         }
 
         private static string GetFooData(Foo item)

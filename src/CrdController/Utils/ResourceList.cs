@@ -2,14 +2,12 @@
 using k8s.Models;
 using System.Collections.Generic;
 
-namespace CrdController.Models
+namespace CrdController.Utils
 {
-    public class FooList : IKubernetesObject<V1ListMeta>, IKubernetesObject, IMetadata<V1ListMeta>, IItems<Foo>
+    public class ResourceList<T> : IKubernetesObject<V1ListMeta>, IKubernetesObject, IMetadata<V1ListMeta>, IItems<T>
     {
-        public FooList() { }
-
         public string ApiVersion { get; set; }
-        public IList<Foo> Items { get; set; }
+        public IList<T> Items { get; set; }
         public string Kind { get; set; }
         public V1ListMeta Metadata { get; set; }
     }

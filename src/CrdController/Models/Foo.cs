@@ -14,7 +14,7 @@ namespace CrdController.Models
         public string Kind { get; set; }
         public V1ObjectMeta Metadata { get; set; }
         public FooSpec Spec { get; set; }
-        public string Status { get; set; }
+        public string Status => Metadata.Annotations["status"];
 
         public class FooSpec
         {

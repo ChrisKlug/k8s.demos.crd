@@ -1,11 +1,10 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace CrdController.Services
+namespace CrdController.Utils
 {
     public class KubernetesLeaderSelector : ILeaderSelector
     {

@@ -1,4 +1,6 @@
+using CrdController.Models;
 using CrdController.Services;
+using CrdController.Utils;
 using k8s;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -30,11 +32,11 @@ namespace CrdController
                     .ConfigurePrimaryHttpMessageHandler(config.CreateDefaultHttpClientHandler)
                     .AddHttpMessageHandler(KubernetesClientConfiguration.CreateWatchHandler);
 
-            services.AddSingleton<IFooList, FooList>();
+            services.AddSingleton<ResourceSet<Foo>>();
             services.AddHostedService<CrdControllerService>();
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IFooList foos)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ResourceSet<Foo> foos)
         {
             if (env.IsDevelopment())
             {
@@ -48,7 +50,7 @@ namespace CrdController
                 endpoints.MapGet("/", async context =>
                 {
                     context.Response.ContentType = "text/text";
-                    await context.Response.WriteAsync(string.Join("\r\n", foos.Foos.Select(x => x.Metadata.Name)));
+                    await context.Response.WriteAsync(string.Join("\r\n", foos.Items.Select(x => x.Metadata.Name)));
                 });
             });
         }

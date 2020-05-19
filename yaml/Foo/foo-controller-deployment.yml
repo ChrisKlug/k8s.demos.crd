@@ -1,21 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: crd-controller-deployment
-  labels:
-    app: crd-controller
+  name: foo-controller
 spec:
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
-      app: crd-controller
+      app: foo-controller
   template:
     metadata:
       labels:
-        app: crd-controller
+        app: foo-controller
     spec:
       containers:
-      - name: crd-controller
+      - name: foo-controller
         image: zerokoll.azurecr.io/crd-demo
         ports:
         - containerPort: 80

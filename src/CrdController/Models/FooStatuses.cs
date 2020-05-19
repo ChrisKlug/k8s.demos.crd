@@ -1,4 +1,4 @@
-﻿namespace CrdController.Services
+﻿namespace CrdController.Models
 {
     public static class FooStatuses
     {
