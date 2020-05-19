@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace CrdController.Utils
+namespace CrdController.Services
 {
     public class DummyLeaderSelector : ILeaderSelector
     {

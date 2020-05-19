@@ -1,5 +1,5 @@
 using CrdController.Models;
-using CrdController.Services;
+using CrdController.HostedServices;
 using CrdController.Utils;
 using k8s;
 using Microsoft.AspNetCore.Builder;
@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Linq;
+using CrdController.Services;
 
 namespace CrdController
 {

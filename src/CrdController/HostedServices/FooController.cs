@@ -1,18 +1,16 @@
 ﻿using CrdController.Models;
+using CrdController.Services;
 using CrdController.Utils;
 using k8s;
 using k8s.Models;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace CrdController.Services
+namespace CrdController.HostedServices
 {
     public class CrdControllerService : IHostedService
     {

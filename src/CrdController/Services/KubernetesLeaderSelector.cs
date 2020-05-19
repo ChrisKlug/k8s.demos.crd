@@ -4,7 +4,7 @@ using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace CrdController.Utils
+namespace CrdController.Services
 {
     public class KubernetesLeaderSelector : ILeaderSelector
     {
