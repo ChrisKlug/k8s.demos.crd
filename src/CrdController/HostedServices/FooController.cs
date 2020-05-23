@@ -82,10 +82,13 @@ namespace CrdController.HostedServices
 
             _logger.LogInformation($"Foo \"{foo.Metadata.Name}\" added\r\n{GetFooData(foo)}");
 
-            await UpdateStatus(foo, FooStatuses.Initializing);
+            await UpdateStatus(foo, "INITIALIZING");
 
+            // TODO: Do whatever is needed when a Foo is added
+
+            // Simulating a delay do to work being done!
             new Timer(x => {
-                UpdateStatus(foo, FooStatuses.Complete);
+                UpdateStatus(foo, "COMPLETE");
             }, null, TimeSpan.FromSeconds(10), TimeSpan.FromMilliseconds(-1));
 
         }
@@ -114,43 +117,18 @@ namespace CrdController.HostedServices
 
         private async Task UpdateStatus(Foo foo, string status)
         {
-            if (!foo.Metadata.Annotations.ContainsKey("status"))
+            if (!foo.Metadata.Annotations.ContainsKey(Foo.StatusAnnotationName))
             {
-                foo.Metadata.Annotations.Add("status", status);
+                foo.Metadata.Annotations.Add(Foo.StatusAnnotationName, status);
             }
             else
             {
-                foo.Metadata.Annotations["status"] = status;
+                foo.Metadata.Annotations[Foo.StatusAnnotationName] = status;
             }
             var patch = new JsonPatchDocument<Foo>();
             patch.Replace(x => x.Metadata.Annotations, foo.Metadata.Annotations);
-            patch.Add(x => x.Status, status);
+            patch.Operations.ForEach(x => x.path = x.path.ToLower());
             var response = await _kubernetes.PatchNamespacedCustomObjectAsync(new V1Patch(patch), Foo.Group, Foo.Version, "default", Foo.Plural, foo.Metadata.Name);
-
-            //var fooRef = new V1ObjectReference(
-            //        apiVersion: "apiextensions.k8s.io/v1beta1",
-            //        kind: "foo",
-            //        name: foo.Metadata.Name,
-            //        namespaceProperty: "default",
-            //        uid: foo.Metadata.Uid
-            //    );
-            //var fooOwnerRef = new V1OwnerReference(
-            //        apiVersion: "apiextensions.k8s.io/v1beta1",
-            //        kind: "foo",
-            //        name: foo.Metadata.Name,
-            //        uid: foo.Metadata.Uid
-            //    );
-            //var ev = new V1Event(
-            //                    involvedObject: fooRef, 
-            //                    metadata: new V1ObjectMeta(generateName: "StatusChangeEvent-", namespaceProperty: "default", ownerReferences: new List<V1OwnerReference> { fooOwnerRef }), 
-            //                    related: fooRef, 
-            //                    action: "StatusChanged", 
-            //                    message: "Status changed to " + status, 
-            //                    type: "StatusChange", 
-            //                    reason: "Because...", 
-            //                    lastTimestamp: DateTime.Now
-            //                );
-            //await _kubernetes.CreateNamespacedEventAsync(ev, "default");
         }
 
         private static string GetFooData(Foo item)

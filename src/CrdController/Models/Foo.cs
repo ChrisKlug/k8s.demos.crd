@@ -9,12 +9,13 @@ namespace CrdController.Models
         public const string Version = "v1";
         public const string Plural = "foos";
         public const string Singular = "foo";
+        public const string StatusAnnotationName = Group + "/foo-status";
 
         public string ApiVersion { get; set; }
         public string Kind { get; set; }
         public V1ObjectMeta Metadata { get; set; }
         public FooSpec Spec { get; set; }
-        public string Status => Metadata.Annotations["status"];
+        public string Status => Metadata.Annotations.ContainsKey(StatusAnnotationName) ? Metadata.Annotations[StatusAnnotationName] : null;
 
         public class FooSpec
         {
