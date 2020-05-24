@@ -8,9 +8,9 @@ spec:
   # group name to use for REST API: /apis/<group>/<version>
   group: demos.fearofoblivion.com
   names:
-    plural: foos
-    singular: foo
     kind: Foo
+    singular: foo
+    plural: foos
     ## shortNames allow shorter string to match your resource on the CLI
     # shortNames:
     # - foo
