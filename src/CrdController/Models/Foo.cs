@@ -3,7 +3,7 @@ using k8s.Models;
 
 namespace CrdController.Models
 {
-    public class Foo : IKubernetesObject<V1ObjectMeta>, IKubernetesObject, IMetadata<V1ObjectMeta>
+    public class Foo : IMetadata<V1ObjectMeta>
     {
         public const string Group = "demos.fearofoblivion.com";
         public const string Version = "v1";
