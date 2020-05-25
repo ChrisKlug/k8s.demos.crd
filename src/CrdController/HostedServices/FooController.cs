@@ -18,6 +18,7 @@ namespace CrdController.HostedServices
         private readonly ResourceSet<Foo> _foos;
         private readonly ILeaderSelector _leaderSelector;
         private readonly ILogger<CrdControllerService> _logger;
+        private Timer _leaderCheckTimer;
         private Watcher<Foo> _watcher;
 
         public CrdControllerService(IKubernetes kubernetes, ResourceSet<Foo> fooList, ILeaderSelector leaderSelector, ILogger<CrdControllerService> logger)
@@ -30,11 +31,20 @@ namespace CrdController.HostedServices
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Starting Foo monitoring...");
-            
-            var fooListResponse = _kubernetes.ListNamespacedCustomObjectWithHttpMessagesAsync(Foo.Group, Foo.Version, "default", Foo.Plural, watch: true);
+            _logger.LogInformation("Starting FooController...");
 
-            _watcher = fooListResponse.Watch<Foo, object>((type, item) => OnFooChange(type, item));
+            _leaderCheckTimer = new Timer(async x => {
+
+                var isLeader = await _leaderSelector.IsLeader();
+                if (isLeader)
+                {
+                    _leaderCheckTimer.Dispose();
+                    _leaderCheckTimer = null;
+                    OnPromotedToLeader();
+                }
+
+            }, null, TimeSpan.FromMilliseconds(0), TimeSpan.FromSeconds(10));
+            
 
             return Task.CompletedTask;
         }
@@ -48,26 +58,28 @@ namespace CrdController.HostedServices
             return Task.CompletedTask;
         }
 
+        private void OnPromotedToLeader()
+        {
+            _logger.LogInformation("Instance promoted to leader! Starting Foo monitoring...");
+
+            var fooListResponse = _kubernetes.ListNamespacedCustomObjectWithHttpMessagesAsync(Foo.Group, Foo.Version, "default", Foo.Plural, watch: true);
+            _watcher = fooListResponse.Watch<Foo, object>(async (type, item) => await OnFooChange(type, item));
+        }
+
         private async Task OnFooChange(WatchEventType type, Foo item)
         {
-            var isLeader = await _leaderSelector.IsLeader();
-            if (!isLeader)
-            {
-                _logger.LogInformation($"Foo \"{item.Metadata.Name}\" {type.ToString().ToLower()} - Not leader, ignoring change!");
-            }
-
             switch (type)
             {
                 case WatchEventType.Added:
-                    await (isLeader ? OnFooAdded(item) : Task.CompletedTask);
+                    await OnFooAdded(item);
                     _foos.Add(item);
                     return;
                 case WatchEventType.Modified:
-                    await (isLeader ? OnFooUpdated(item) : Task.CompletedTask);
+                    await OnFooUpdated(item);
                     _foos.Update(item);
                     return;
                 case WatchEventType.Deleted:
-                    await (isLeader ? OnFooDeleted(item) : Task.CompletedTask);
+                    await OnFooDeleted(item);
                     _foos.Remove(item);
                     return;
             };
@@ -75,8 +87,9 @@ namespace CrdController.HostedServices
 
         private async Task OnFooAdded(Foo foo)
         {
-            if (foo.Status != null)
+            if (foo.Status == "COMPLETE")
             {
+                _logger.LogInformation($"Foo \"{foo.Metadata.Name}\" already completed. Ignoring...");
                 return;
             }
 
@@ -87,8 +100,8 @@ namespace CrdController.HostedServices
             // TODO: Do whatever is needed when a Foo is added
 
             // Simulating a delay do to work being done!
-            new Timer(x => {
-                UpdateStatus(foo, "COMPLETE");
+            new Timer(async x => {
+                await UpdateStatus(foo, "COMPLETE");
             }, null, TimeSpan.FromSeconds(10), TimeSpan.FromMilliseconds(-1));
 
         }
