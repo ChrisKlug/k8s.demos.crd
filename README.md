@@ -1,12 +1,12 @@
 # Kubernetes Custom Rresource Definition (CRD) Demo
 
-This repo contains code for demonstrating the use of Custom Resource Dictionaries (CRD). It is the foundation for a blog post published at https://fearofoblivion.com/.
+This repo contains code for demonstrating the use of Custom Resource Dictionaries (CRD). It is the foundation for a blog post published at https://fearofoblivion.com/intro-to-kubernetes-custom-resource-definitions-or-crds.
 
 ## Content
 
-In the /yaml directory, you will find the YAML-files required to set up a CRD called Foo, as well as a couple of Foo instances. On top of that, there is also a YAML-file that contains the spec needed to run the sample in a Kubernetes cluster.
+In the __/yaml__ directory, you will find the YAML-files required to set up a CRD called Foo, as well as a couple of Foo instances. On top of that, there is also a YAML-file that contains the spec needed to run the sample in a Kubernetes cluster.
 
-In the /src/CrdController you will find .NET Core source code for a Kubernetens controller responsible for managing the Foo resources in the cluster. It is built as an ASP.NET Core application with a HostedService to do the monitoring. It also allows you to list the currently managed Foo resources in the cluster by browsing to the application. 
+In the __/src/CrdController__ you will find .NET Core source code for a Kubernetens controller responsible for managing the Foo resources in the cluster. It is built as an ASP.NET Core application with a HostedService to do the monitoring. It also allows you to list the currently managed Foo resources in the cluster by browsing to the application. 
 
 __Note:__ The controller is running with multiple replicas, and browsing to it will only work for the leader instance as the list is just an in-memory list.
 
