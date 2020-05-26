@@ -41,7 +41,7 @@ namespace CrdController.Services
             }
             _logger.LogInformation("Got leader information " + response);
 
-            return response.Contains(_hostEnvironment.EnvironmentName);
+            return response.Contains(Environment.MachineName);
         }
     }
 }

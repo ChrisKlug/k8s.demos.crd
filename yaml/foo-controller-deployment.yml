@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: foo-controller
-        image: zerokoll.azurecr.io/crd-demo
+        image: < IMAGE REPO >/crd-demo
         ports:
         - containerPort: 80
         resources:
@@ -22,7 +22,7 @@ spec:
               memory: 128Mi
               cpu: 250m
       - name: leader-election
-        image: "k8s.gcr.io/leader-elector:0.5"
+        image: fredrikjanssonse/leader-elector:0.6
         args:
         - --election=foo-election
         - --http=0.0.0.0:4040
@@ -33,5 +33,3 @@ spec:
             limits:
               memory: 128Mi
               cpu: 250m
-      imagePullSecrets:
-        - name: azurecr-zerokoll
